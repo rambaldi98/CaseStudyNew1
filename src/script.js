@@ -1,8 +1,7 @@
 const canvas = document.getElementById('canvas1');
 const ctx = canvas.getContext('2d');
-canvas.width = 900;
-canvas.height = 600;
-
+canvas.width = 1500;
+canvas.height = 900;
 
 // global variables 
 const cellSize = 100; // kich thuoc o la 100px
@@ -21,19 +20,30 @@ let gameOver = false;
 
 const projectiles = []; // dan ban 
 let score = 0; // diem 
-const winninngScore = 10;
+const winninngScore = 100;
 
+const amounts = [20,30,40,50];// mang diem mat troi
+const resources = []; // mang chua mat troi
+
+const floatingMessage = [];
+
+
+// tao mang chua loai ke thu 
+const enemyTypes = [];
+const enemy1 = new Image();
+enemy1.src = '../img/runman_4746_42.png';
+enemyTypes.push(enemy1);
 
 
 // mouse
 const mouse = {
-    x : 10,
-    y : 10,
+    x : undefined,
+    y : undefined,
     width : 0.1,
     height : 0.1
 };
 let canvasPosition = canvas.getBoundingClientRect(); // trich xuat vi tri canvas
-console.log(canvasPosition);
+
 canvas.addEventListener('mousemove',function(e){
     mouse.x = e.x  - canvasPosition.left; // lay vi tri chuot
     mouse.y = e.y - canvasPosition.top;
@@ -45,12 +55,13 @@ canvas.addEventListener('mouseleave', function(){
 })
 
 // game board
-
+// tao doi tuong thanh dieu khien , chieu cao bang voi kich thuoc o
 const controlsBar = {
-     // tao doi tuong thanh dieu khien , chieu cao bang voi kich thuoc o
+     
     width : canvas.width,
     height : cellSize,
 }
+
 
 class Cell {
     constructor (x,y) {
@@ -76,7 +87,7 @@ function creatGrid() {
         }
     }
 }
-creatGrid();
+
 function handleGameGrid() {
     for(let i = 0; i < gameGrid.length; i ++) {
         gameGrid[i].draw();
@@ -89,16 +100,16 @@ class Projectile {
     constructor(x,y) {
         this.x = x;
         this.y = y;
-        this.width = 10;
-        this.height = 10;
-        this.power = 20;
+        this.width = 20;
+        this.height = 20;
+        this.power = 30;
         this.speed = 5;
     }
     update() {
         this.x += this.speed;
     }
     draw() {
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = 'green';
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.width,0,Math.PI*2);
         ctx.fill();
@@ -128,7 +139,7 @@ function handleProjectiles() {
             projectiles.splice(i,1);
             i--;
         }
-        console.log('projectiles '+projectiles.length );
+        // console.log('projectiles '+projectiles.length );
     }
 }
 
@@ -146,11 +157,14 @@ class Defender {
     }
 
     draw() {
+
         ctx.fillStyle = 'blue';
         ctx.fillRect(this.x,this.y,this.width,this.height);
         ctx.fillStyle = 'gold';
         ctx.font = '30px Arial'; // hien thi font 20 px
         ctx.fillText(Math.floor( this.health),this.x + 15,this.y + 30);
+        
+        
     }
 
     update() {
@@ -172,22 +186,28 @@ canvas.addEventListener('click', function() {
     if(gridPositionY < cellSize) 
         return;
 
-    // kiem tra xem vi tri nay co hau ve hay chua
-    for(let i = 0; i < defenders.length; i ++) {
-        if(defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) 
-            return;
-    }
+    // kiem tra xem vi tri nay co nguoi ve hay chua
+    // for(let i = 0; i < defenders.length; i ++) {
+    //     if(defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) 
+    //         return;
+    // }
 
     let defendersCost = 100;// diem chi phi ban dau ch hau ve
     if(numberOfResources >= defendersCost) {
+        if(!gameOver){
         defenders.push(new Defender(gridPositionX,gridPositionY)); // mang defenders them vao doi tuong defender
         numberOfResources -= defendersCost; // tru tien phi 
+        }
+    } else {
+        floatingMessage.push(new FloatingMessage('need money',mouse.x,mouse.y,20,'blue'));
     }
 
 });
 
 // tao chuc nang hau ve 
 function handleDefenders() {
+    
+    
     for(let i = 0; i < defenders.length; i++) {
         defenders[i].draw();
         defenders[i].update();
@@ -211,6 +231,8 @@ function handleDefenders() {
             }
         }
     }
+
+
 }
 
 
@@ -225,10 +247,24 @@ class Enemy {
         this.movement = this.speed;
         this.health = 100; // suc khoe ke thu
         this.maxHealth = this.health;
+
+        // them hinh nhan vat
+        this.enemyTypes = enemyTypes[0];
+        this.frameX = 0;
+        this.frameY = 0;
+        this.minFrame = 0;
+        this.maxFrame = 7;
+        this.spriteWidth = 93;
+        this.spriteHeight = 135;
+
     }
 
     update() {
         this.x -= this.movement;
+        if(this.frameX < this.maxFrame) 
+            this.frameX++;
+        else 
+            this.frameX = this.minFrame;
 
     }
 
@@ -238,6 +274,19 @@ class Enemy {
         ctx.fillStyle = 'gold';
         ctx.font = '30px Arial'; // hien thi font 20 px
         ctx.fillText(Math.floor( this.health),this.x + 15,this.y + 30);
+
+        //
+        // ctx.drawImage(
+        //     this.enemyTypes,
+        //     this.frameX*this.spriteWidth,
+        //     0,
+        //     this.spriteWidth,
+        //     this.spriteHeight,
+        //     this.x,
+        //     this.y,
+        //     this.width,
+        //     this.height
+        // )
 
     }
 }
@@ -254,30 +303,31 @@ function handleEnemies() {
             gameOver = true;
         }
         if(enemies[i].health <= 0) {
-            let gainedResources = enemies[i].maxHealth/10;
+            let gainedResources = enemies[i].maxHealth/10;// diem /
+            floatingMessage.push( new FloatingMessage('+'+gainedResources,enemies[i].x,enemies[i].y,30,'black'));
+            floatingMessage.push( new FloatingMessage('+'+gainedResources,250,50,30,'gold'));
             numberOfResources += gainedResources;
             score += gainedResources;
             const findThisIndex = enemyPosition.indexOf(enemies[i].y); // tim vi tri ke thu trong mang ke thu
             enemyPosition.splice(findThisIndex,1);
             enemies.splice(i,1);
             i--;
-            console.log(enemyPosition);
+            
         }
     }
     if(frame % enemiesInterval === 0 && score < winninngScore) {
-        let verticalPosition = Math.floor(Math.random() * 5 + 1)*cellSize + cellGap; // vi tri hang ke thu xuat hien
+        let verticalPosition = Math.floor(Math.random() * 8 + 1)*cellSize + cellGap; // vi tri hang ke thu xuat hien
         enemies.push(new Enemy(verticalPosition));
         enemyPosition.push(verticalPosition);
 
         if(enemiesInterval > 120 ) enemiesInterval -= 50;
-        console.log(enemyPosition);
+       
 
     }
 }
 
 // them mat troi 
-const amounts = [20,30,40];
-const resources = []; // mang chua mat troi
+
 class Resource {
     constructor () {
         this.x = Math.random()*(canvas.width - cellSize);
@@ -305,6 +355,9 @@ function handleResources() {
         resources[i].draw();
         if(resources[i]&& mouse.x&&mouse.y&&collision(resources[i],mouse)){
             numberOfResources += resources[i].amounts;
+            floatingMessage.push( new FloatingMessage('+'+resources[i].amounts,resources[i].x,resources[i].y,20,'black'));
+            floatingMessage.push( new FloatingMessage('+'+resources[i].amounts,150,30,30,'gold'));
+
             resources.splice(i,1);
             i--;
         }
@@ -327,30 +380,70 @@ function handleGameStatus() {
     if(score > winninngScore && enemies.length === 0){
         ctx.fillStyle = 'black';
         ctx.font = '60px Arial';
+        
         ctx.fillText('LEVEL COMPLETE',200,300);
         ctx.font = '30px Arial';
-        ctx.fillText('YOU WIN WITH '+ score + ' points!',300,360)
+        ctx.fillText('YOU WIN WITH '+ score + ' points!',300,360);
+        gameOver = true ;
     }
 }
 
+// tin nhan 
+class FloatingMessage {
+    constructor(value,x,y,size,color) {
+        this.value = value;
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.lifeSpan = 0;
+        this.color = color;
+        this.opacity = 1; // do trong suot cua ban ve
+    }
+    update() {
+        this.y -= 0.3;
+        this.lifeSpan += 1;
+        if(this.opacity > 0.05) 
+            this.opacity -= 0.05;
+    };
+    draw() {
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+        ctx.font = this.size +'px Arial';
+        ctx.fillText(this.value,this.x,this.y);
+        ctx.globalAlpha = 1;
+    };
+}
+// dieu khien tin nhan
+function handleFloatingMessage () {
+    for(let i = 0; i < floatingMessage.length; i++) {
+        floatingMessage[i].update();
+        floatingMessage[i].draw();
+        if(floatingMessage[i].lifeSpan >= 50) {
+            floatingMessage.splice(i,1);
+            i--;
+        }
+    }
+};
 
+
+creatGrid();
 // function check lien tuc doi tuong 
     function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle = 'blue';
         ctx.fillRect(0,0,controlsBar.width,controlsBar.height);
         handleGameGrid();
+        
         handleDefenders();
         handleResources();
         handleProjectiles();
         handleEnemies();
-        
+        handleFloatingMessage()
         handleGameStatus();
 
         
-        
         frame++;
-        console.log(frame);
+    
         if(!gameOver) requestAnimationFrame(animate);
     }
     animate();

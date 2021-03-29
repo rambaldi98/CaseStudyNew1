@@ -9,7 +9,7 @@ body {
     left: 50%;
     transform: translate(-50%,-50%);
     /* transform dich chuyen vi rtri ra giua */
-    width: 900px;
-    height: 600px;
+    width: 1500px;
+    height: 900px;
     background: white;
 }
