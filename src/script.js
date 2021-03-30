@@ -349,8 +349,8 @@ function chooseDefender() {
     }
 
     //
-    ctx.lineWidth = 1;
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    // ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
     //
     ctx.fillRect(
         card1.x,
@@ -370,7 +370,6 @@ function chooseDefender() {
         15,
         128/2,
         128/2
-
         );
 ////////////////////////
 
@@ -393,7 +392,8 @@ function chooseDefender() {
         128/2,
         128/2
         );
-       
+        // fillStyle = 'gold';
+        // ctx.fillStyle = 'rgba(0,0,0,1)';
 }
 
 
@@ -404,7 +404,7 @@ class Enemy {
         this.y = verticalPosition; // vi tri hang xuat hien
         this.width = cellSize - cellGap*2;
         this.height = cellSize - cellGap*2;
-        this.speed = Math.random()*0.2 + 0.5; 
+        this.speed =  Math.random()*0.2 + 0.5; 
         this.movement = this.speed;
         this.health = 100; // suc khoe ke thu
         this.maxHealth = this.health;
@@ -487,7 +487,7 @@ function handleEnemies() {
         enemies.push(new Enemy(verticalPosition));
         enemyPosition.push(verticalPosition);
 
-        if(enemiesInterval > 120 ) enemiesInterval -= 50;
+        if(enemiesInterval > 100 ) enemiesInterval -= 50;
        
 
     }
@@ -538,6 +538,7 @@ function handleResources() {
 
 function handleGameStatus() {
     // ctx.beginPath();
+    // ctx.fillStyle = 'rgba(0,0,0,0)';
     fillStyle = 'gold';
     // fillStyle = 'gold';
     ctx.font = '30px Arial';
@@ -610,8 +611,9 @@ creatGrid();
         handleProjectiles();
         handleEnemies();
         chooseDefender();
-        handleGameStatus();
         handleFloatingMessage();
+        handleGameStatus();
+        
         frame++;
     
         if(!gameOver) requestAnimationFrame(animate);
