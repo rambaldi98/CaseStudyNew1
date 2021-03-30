@@ -12,8 +12,8 @@ const defenders = []; // tao mang trong nhunng nguoi bao ve
 const enemies = []; // tao mang chua ke thu
 const enemyPosition  = []; // tao mang chua  vi tri hang ke thu 
 // let defendersCost = 100; // diem ban dau ch hau ve
-let numberOfResources = 300; // bien chu cai cung cap cho nguoi choi vi du 300 tai nguyen khi bat dau
-let enemiesInterval = 600; // thoi gian goi ke thu
+let numberOfResources = 400; // bien chu cai cung cap cho nguoi choi vi du 300 tai nguyen khi bat dau
+let enemiesInterval = 800; // thoi gian goi ke thu
 let frame = 0;
 
 let gameOver = false;
@@ -21,6 +21,7 @@ let gameOver = false;
 const projectiles = []; // dan ban 
 let score = 0; // diem 
 const winninngScore = 100;
+let choosenDefender = 1; // chon defender 
 
 const amounts = [20,30,40,50];// mang diem mat troi
 const resources = []; // mang chua mat troi
@@ -31,17 +32,48 @@ const floatingMessage = [];
 // tao mang chua loai ke thu 
 const enemyTypes = [];
 const enemy1 = new Image();
-enemy1.src = '../img/runman_4746_42.png';
+enemy1.src = '../img/runman2_4116_98_139 nguoc.png';
 enemyTypes.push(enemy1);
 
+// ke thu 2
+const enemy2 = new Image();
+enemy2.src = '../img/runman2_4116_98_139 nguoc.png';
+enemyTypes.push(enemy2);
+ 
+// nguoi bao ve 1
+const defender1 = new Image();
+defender1.src = '../img/spritesheet_nguoiban_128_128_72.png';
+
+
+const card1 = {
+    x : 10,
+    y : 10,
+    width : 70,
+    height : 85
+}
+
+const card2 = {
+    x : 10 + cellSize,
+    y : 10,
+    width : 70,
+    height : 85
+}
 
 // mouse
 const mouse = {
     x : undefined,
     y : undefined,
     width : 0.1,
-    height : 0.1
+    height : 0.1,
+    clicked : false
 };
+canvas.addEventListener('mousedown',function() {
+    mouse.clicked = true;
+});
+
+canvas.addEventListener('mouseup',function() {
+    mouse.clicked = false;
+});
 let canvasPosition = canvas.getBoundingClientRect(); // trich xuat vi tri canvas
 
 canvas.addEventListener('mousemove',function(e){
@@ -100,10 +132,10 @@ class Projectile {
     constructor(x,y) {
         this.x = x;
         this.y = y;
-        this.width = 20;
-        this.height = 20;
-        this.power = 30;
-        this.speed = 5;
+        this.width = 15;
+        this.height = 15;
+        this.power = 20;
+        this.speed = 4;
     }
     update() {
         this.x += this.speed;
@@ -111,7 +143,7 @@ class Projectile {
     draw() {
         ctx.fillStyle = 'green';
         ctx.beginPath();
-        ctx.arc(this.x,this.y,this.width,0,Math.PI*2);
+        ctx.arc(this.x + 20,this.y + 20,this.width,0,Math.PI*2);
         ctx.fill();
     }
 }
@@ -151,31 +183,92 @@ class Defender {
         this.width = cellSize - cellGap*2;
         this.height = cellSize - cellGap*2;
         this.shooting = false; // kiem tra phat hien ke thu
-        this.health = 100; // suc khoe hau ve
+        this.shootNow = false;
+        this.health = 100; // suc khoe bao ve
         this.projectiles = []; // thong tin ve duong dan hau ve dang ban
         this.timer = 0;  // bo dem thoi gian khi hau ve phat hien ke thu
+        
+        // image
+     
+        this.frameX = 0;
+        this.frameY = 0;
+        this.spriteWidth = 128;
+        this.spriteHeight = 128;
+        this.minFrame = 0;
+        this.maxFrame = 24;
+        this.choosenDefender = choosenDefender;
+
     }
 
     draw() {
 
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.x,this.y,this.width,this.height);
+        // ctx.fillStyle = 'blue';
+        // ctx.fillRect(this.x,this.y,this.width,this.height);
         ctx.fillStyle = 'gold';
         ctx.font = '30px Arial'; // hien thi font 20 px
-        ctx.fillText(Math.floor( this.health),this.x + 15,this.y + 30);
+        // ctx.fillText(Math.floor( this.health),this.x + 15,this.y + 30);
+        
+        //
+        if(this.choosenDefender === 1){
+            ctx.drawImage(
+                defender1,
+                this.frameX*this.spriteWidth,
+                0,
+                this.spriteWidth,
+                this.spriteHeight,
+                this.x,
+                this.y,
+                this.width,
+                this.height
+    
+            ) 
+        } else if(this.choosenDefender === 2) {
+            ctx.drawImage(
+                defender1,
+                this.frameX*this.spriteWidth,
+                0,
+                this.spriteWidth,
+                this.spriteHeight,
+                this.x,
+                this.y,
+                this.width,
+                this.height
+    
+            ) 
+        }
         
         
     }
 
     update() {
-        // khi phat hien ra ke thu
+
+        if(frame % 5 === 0) {
+            if(this.frameX < this.maxFrame) 
+                this.frameX++;
+            else
+                this.frameX = this.minFrame;
+            
+            if(this.frameX === 10) this.shootNow = true;
+        }
+
         if(this.shooting) {
-            this.timer ++;
-            if(this.timer % 100 === 0) {
-                projectiles.push(new Projectile(this.x + 50,this.y + 50));
-            }
-        } else {
-            this.timer = 0;
+            this.minFrame = 3;
+            this.maxFrame = 12
+        }
+        else {
+            this.minFrame = 13;
+            this.maxFrame = 24;
+        }
+        
+        // khi phat hien ra ke thu
+        if(this.shooting && this.shootNow) {
+            // this.timer ++;
+            // if(this.timer % 100 === 0) {
+                projectiles.push(new Projectile(this.x + 50,this.y + 20));
+                this.shootNow = false;
+            // }
+        // } else {
+            // this.timer = 0;
         }
     }
 }
@@ -234,6 +327,74 @@ function handleDefenders() {
 
 
 }
+// chon nguoi bao ve
+let card1stroke = 'black';
+let card2stroke = 'black';
+function chooseDefender() {
+    
+
+    if(collision(mouse,card1) && mouse.clicked) {
+        choosenDefender = 1;
+    } else if(collision(mouse,card2)&&mouse.clicked){
+        choosenDefender = 2;
+    }
+
+    if(choosenDefender == 1) {
+        card1stroke = 'gold';
+        card2stroke = 'black';
+    }
+    else if(choosenDefender == 2) {
+        card1stroke = 'black';
+        card2stroke = 'gold';
+    }
+
+    //
+    ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    //
+    ctx.fillRect(
+        card1.x,
+        card1.y,
+        card1.width,
+        card1.height
+    );
+    ctx.strokeStyle = card1stroke;
+    ctx.strokeRect(card1.x,card1.y,card1.width,card1.height);
+    ctx.drawImage(
+        defender1,
+        0,
+        0,
+        128,
+        128,
+        10,
+        15,
+        128/2,
+        128/2
+
+        );
+////////////////////////
+
+    ctx.fillRect(
+        card2.x,
+        card2.y,
+        card2.width,
+        card2.height
+    );
+    ctx.strokeStyle = card2stroke;
+    ctx.strokeRect(card2.x,card2.y,card2.width,card2.height);
+    ctx.drawImage(
+        defender1,
+        0,
+        0,
+        128,
+        128,
+        10 + cellSize,
+        15,
+        128/2,
+        128/2
+        );
+       
+}
 
 
 // tao ke thu
@@ -253,40 +414,46 @@ class Enemy {
         this.frameX = 0;
         this.frameY = 0;
         this.minFrame = 0;
-        this.maxFrame = 7;
-        this.spriteWidth = 93;
-        this.spriteHeight = 135;
+        this.maxFrame = 42;
+        this.spriteWidth = 98;
+        this.spriteHeight = 139;
 
     }
 
     update() {
         this.x -= this.movement;
-        if(this.frameX < this.maxFrame) 
-            this.frameX++;
-        else 
-            this.frameX = this.minFrame;
+        if(frame % 2 ===0) {
+            if(this.frameX < this.maxFrame) 
+                this.frameX++;
+            else 
+                this.frameX = this.minFrame;
+        }
+        
 
     }
 
     draw() {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.x,this.y,this.width,this.height);
+        // ctx.fillStyle = 'red';
+        // // ctx.fillRect(this.x,this.y,this.width,this.height);
         ctx.fillStyle = 'gold';
-        ctx.font = '30px Arial'; // hien thi font 20 px
-        ctx.fillText(Math.floor( this.health),this.x + 15,this.y + 30);
+        // ctx.font = '30px Arial'; // hien thi font 20 px
+        // ctx.fillText(Math.floor( this.health),this.x + 15,this.y + 30);
 
-        //
-        // ctx.drawImage(
-        //     this.enemyTypes,
-        //     this.frameX*this.spriteWidth,
-        //     0,
-        //     this.spriteWidth,
-        //     this.spriteHeight,
-        //     this.x,
-        //     this.y,
-        //     this.width,
-        //     this.height
-        // )
+        // ctx.rotate( 2* Math.PI );
+        
+
+        ctx.drawImage(
+            this.enemyTypes,
+            this.frameX*this.spriteWidth,
+            0,
+            this.spriteWidth,
+            this.spriteHeight,
+            this.x,
+            this.y,
+            this.width,
+            this.height
+        )
+        // ctx.rotate(  Math.PI /30);
 
     }
 }
@@ -337,11 +504,14 @@ class Resource {
         this.amounts = amounts[Math.floor(Math.random()*amounts.length)]; 
     }
     draw() {
+        ctx.beginPath();
         ctx.fillStyle = 'yellow';
-        ctx.fillRect(this.x,this.y,this.width,this.height);
+        ctx.arc(this.x ,this.y,30,0,Math.PI*2);
+        ctx.fill();
+        // ctx.fillRect(this.x,this.y,this.width,this.height);
         ctx.fillStyle = 'black';
         ctx.font = '20px Arial';
-        ctx.fillText(this.amounts,this.x +15,this.y + 25);
+        ctx.fillText(this.amounts,this.x -15,this.y + 15);
     }
 }
 // xu ly mat troi 
@@ -356,7 +526,7 @@ function handleResources() {
         if(resources[i]&& mouse.x&&mouse.y&&collision(resources[i],mouse)){
             numberOfResources += resources[i].amounts;
             floatingMessage.push( new FloatingMessage('+'+resources[i].amounts,resources[i].x,resources[i].y,20,'black'));
-            floatingMessage.push( new FloatingMessage('+'+resources[i].amounts,150,30,30,'gold'));
+            floatingMessage.push( new FloatingMessage('+'+resources[i].amounts,450,80,20,'gold'));
 
             resources.splice(i,1);
             i--;
@@ -367,23 +537,24 @@ function handleResources() {
 // xu ly trang thai tro choi
 
 function handleGameStatus() {
+    // ctx.beginPath();
     fillStyle = 'gold';
+    // fillStyle = 'gold';
     ctx.font = '30px Arial';
-    ctx.fillText( 'Resources: ' + numberOfResources,20,40 );
-    ctx.fillText( 'Score: ' + score,20,80 );
+    ctx.fillText( 'Resources: ' + numberOfResources,250,40 );
+    ctx.fillText( 'Score: ' + score,250 ,80 );
     if(gameOver) {
         ctx.fillStyle = 'black';
         ctx.font = '90px Arial';
-        ctx.fillText('GAME OVER',200,330);
+        ctx.fillText('GAME OVER',300,380);
     }
 
     if(score > winninngScore && enemies.length === 0){
         ctx.fillStyle = 'black';
         ctx.font = '60px Arial';
-        
-        ctx.fillText('LEVEL COMPLETE',200,300);
+        ctx.fillText('LEVEL COMPLETE',400,380);
         ctx.font = '30px Arial';
-        ctx.fillText('YOU WIN WITH '+ score + ' points!',300,360);
+        ctx.fillText('you win with '+ score + ' points!',450,450);
         gameOver = true ;
     }
 }
@@ -438,17 +609,16 @@ creatGrid();
         handleResources();
         handleProjectiles();
         handleEnemies();
-        handleFloatingMessage()
+        chooseDefender();
         handleGameStatus();
-
-        
+        handleFloatingMessage();
         frame++;
     
         if(!gameOver) requestAnimationFrame(animate);
     }
     animate();
 
-    // kiem tra va cham chuot tai su dung de tim ra va cham
+    // kiem tra va tai su dung de tim ra va cham
     function collision (first,second) {
         if(!(
             first.x > second.x + second.width||
