@@ -504,11 +504,11 @@ class Resource {
         this.amounts = amounts[Math.floor(Math.random()*amounts.length)]; 
     }
     draw() {
-        ctx.beginPath();
+        // ctx.beginPath();
         ctx.fillStyle = 'yellow';
-        ctx.arc(this.x ,this.y,30,0,Math.PI*2);
-        ctx.fill();
-        // ctx.fillRect(this.x,this.y,this.width,this.height);
+        // ctx.arc(this.x ,this.y,30,0,Math.PI*2);
+        // ctx.fill();
+        ctx.fillRect(this.x,this.y,this.width,this.height);
         ctx.fillStyle = 'black';
         ctx.font = '20px Arial';
         ctx.fillText(this.amounts,this.x -15,this.y + 15);
